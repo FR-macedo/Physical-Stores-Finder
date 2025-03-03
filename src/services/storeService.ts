@@ -1,32 +1,32 @@
 import Store, { IStore } from '../models/store';
 import { ViaCepService } from './viaCepService';
 import { OpenRouteService } from './openRouteService';
+import { NominatimService, Coordinates } from './nominatimService';
 import { logger } from '../config/logger';
-
-interface Coordinates {
-  latitude: number;
-  longitude: number;
-}
 
 interface StoreWithDistance {
   store: IStore;
   distance: number;
+  coordinates: Coordinates;
 }
 
 export class StoreService {
   static async findNearestStore(userCep: string): Promise<StoreWithDistance | null> {
     try {
-      // Obter coordenadas do usuário a partir do CEP
       const userAddress = await ViaCepService.getAddressByCep(userCep);
       
-      // Para este exemplo, vamos usar um serviço de geocodificação fictício
-      // Em um cenário real, você usaria um serviço como Google Geocoding API
-      const userCoordinates: Coordinates = {
-        latitude: 0, // Substituir por geocodificação real
-        longitude: 0 // Substituir por geocodificação real
-      };
+      if (!userAddress) {
+        logger.warn(`Endereço não encontrado para o CEP: ${userCep}`);
+        return null;
+      }
+
+      const userCoordinates = await NominatimService.getCoordinates(userAddress);
       
-      // Obter todas as lojas do banco de dados
+      if (!userCoordinates) {
+        logger.warn(`Não foi possível obter coordenadas para o endereço: ${userAddress}`);
+        return null;
+      }
+      
       const stores = await Store.find();
       
       if (stores.length === 0) {
@@ -35,7 +35,6 @@ export class StoreService {
       
       let nearestStore: StoreWithDistance | null = null;
       
-      // Calcular a distância para cada loja
       for (const store of stores) {
         const storeCoordinates: Coordinates = {
           latitude: store.latitude,
@@ -48,13 +47,13 @@ export class StoreService {
           continue;
         }
         
-        const distanceInKm = route.distance / 1000;
+        const distanceInKm = route.distance; // Já vem em quilômetros do OpenRouteService
         
-        // Verificar se é a loja mais próxima até agora
         if (!nearestStore || distanceInKm < nearestStore.distance) {
           nearestStore = {
             store,
-            distance: distanceInKm
+            distance: distanceInKm,
+            coordinates: storeCoordinates
           };
         }
       }
