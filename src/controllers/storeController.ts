@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { StoreService } from '../services/storeService';
 import { logger } from '../config/logger';
 
-export class LocationController {
+export class StoreController {
   static async findNearestStore(req: Request, res: Response): Promise<void> {
     try {
       const { cep } = req.params;
