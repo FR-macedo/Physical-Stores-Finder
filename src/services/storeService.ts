@@ -16,79 +16,72 @@ interface NearestStoresResponse {
 }
 
 export class StoreService {
-  static async findNearestStores(
-    userCep: string
-  ): Promise<NearestStoresResponse> {
+  static async findNearestStores(userCep: string): Promise<NearestStoresResponse> {
     try {
+      logger.info(`Iniciando busca de lojas para o CEP: ${userCep}`);
+      
+      // 1. Obtendo o endereço pelo ViaCep
       const userAddress = await ViaCepService.getAddressByCep(userCep);
-
       const fullAddress = `${userAddress.logradouro}, ${userAddress.localidade} - ${userAddress.uf}, ${userAddress.cep}`;
-
-      const userCoordinates = await NominatimService.getCoordinates(
-        fullAddress
-      );
-
+      logger.info(`Endereço obtido: ${fullAddress}`);
+      
+      // 2. Obtendo coordenadas pelo Nominatim
+      const userCoordinates = await NominatimService.getCoordinates(fullAddress);
       if (!userCoordinates) {
-        logger.warn(
-          `Não foi possível obter coordenadas para o CEP: ${userCep}`
-        );
-        throw new Error(
-          "Não foi possível localizar coordenadas para o endereço informado"
-        );
+        logger.warn(`Não foi possível obter coordenadas para o CEP: ${userCep}`);
+        throw new Error("Não foi possível localizar coordenadas para o endereço informado");
       }
-
-      const nearbyStores = await Store.find({
-        location: {
-          $near: {
-            $geometry: {
-              type: "Point",
-              coordinates: [
-                userCoordinates.longitude,
-                userCoordinates.latitude,
-              ],
-            },
-            $maxDistance: 100000, // 100 km em metros
-          },
-        },
-      });
-
-      if (nearbyStores.length === 0) {
-        throw new Error("Não há lojas dentro do raio de 100km");
-      }
-
+      logger.info(`Coordenadas obtidas: ${userCoordinates.latitude}, ${userCoordinates.longitude}`);
+      
+      // 3. Obtendo todas as lojas do banco de dados
+      const allStores = await Store.find({});
+      logger.info(`Total de lojas encontradas no banco: ${allStores.length}`);
+      
       const storesWithDistances: StoreWithDistance[] = [];
-
-      for (const store of nearbyStores) {
+      
+      for (const store of allStores) {
+        const storeCoordinates: Coordinates = {
+          latitude: store.location.coordinates[0],
+          longitude: store.location.coordinates[1],
+        };
+        
         try {
-          const storeCoordinates: Coordinates = {
-            latitude: store.location.coordinates[1],
-            longitude: store.location.coordinates[0],
-          };
-
-          let distance: number;
-          const route = await OpenRouteService.getRoute(
-            userCoordinates,
-            storeCoordinates
-          );
-
-          distance = route
-            ? route.distance
-            : this.calculateFallbackDistance(userCoordinates, storeCoordinates);
-
-          storesWithDistances.push({
-            store,
-            distance,
-          });
+          logger.info(`Calculando rota para loja: ${store.name}...`);
+          const route = await OpenRouteService.getRoute(userCoordinates, storeCoordinates);
+          
+          let distance;
+          if (route && route.distance) {
+            distance = route.distance;
+          } else {
+            logger.warn(`OpenRouteService falhou para loja: ${store.name}, utilizando Haversine.`);
+            logger.info(`coordenadas do usuário: ${userCoordinates.latitude}, ${userCoordinates.longitude}`);
+            logger.info(`coordenadas da loja: ${storeCoordinates.latitude}, ${storeCoordinates.longitude}`);
+            distance = calculateHaversineDistance(userCoordinates, storeCoordinates);
+          }
+          
+          if (distance < 0) {
+            logger.warn(`Distância negativa calculada para loja: ${store.name}, verificando ordem das coordenadas.`);
+            distance = Math.abs(distance);
+          }
+          
+          logger.info(`Distância para loja ${store.name}: ${distance.toFixed(2)} km`);
+          
+          if (distance <= 100) {
+            storesWithDistances.push({ store, distance });
+          }
         } catch (error) {
-          logger.error(`Erro ao calcular distância para loja: ${error}`);
-          continue;
+          logger.error(`Erro ao calcular distância para loja ${store.name}: ${error}`);
         }
       }
-
-      const sortedStores = storesWithDistances.sort(
-        (a, b) => a.distance - b.distance
-      );
-
+      
+      if (storesWithDistances.length === 0) {
+        logger.error("Nenhuma loja dentro do raio de 100km foi encontrada.");
+        throw new Error("Não há lojas dentro do raio de 100km");
+      }
+      
+      // 5. Ordenando lojas por distância
+      const sortedStores = storesWithDistances.sort((a, b) => a.distance - b.distance);
+      
       return {
         nearestStore: sortedStores[0],
         otherStores: sortedStores.slice(1),
@@ -97,12 +90,5 @@ export class StoreService {
       logger.error(`Erro ao buscar lojas próximas: ${error}`);
       throw error;
     }
-  }
-
-  private static calculateFallbackDistance(
-    point1: Coordinates,
-    point2: Coordinates
-  ): number {
-    return calculateHaversineDistance(point1, point2);
   }
 }
