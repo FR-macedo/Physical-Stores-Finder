@@ -9,7 +9,7 @@
     "build": "tsc",
     "test": "jest",
     "test:watch": "jest --watch",
-    "seed": "ts-node mockData.ts",
+    "seed:stores": "ts-node src/scripts/seedStores.ts",
     "lint": "eslint . --ext .ts"
   },
   "keywords": [
