@@ -36,7 +36,7 @@ const StoreSchema: Schema = new Schema({
   }
 });
 
-// Criar índice geoespacial
+// cria o índice geoespacial
 StoreSchema.index({ location: '2dsphere' });
 
 export default mongoose.model<IStore>('Store', StoreSchema);
