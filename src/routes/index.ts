@@ -1,13 +1,14 @@
+// routes/index.ts
 import { Router } from 'express';
-import storeRoutes from './storeRoutes';
+import { StoreController } from '../controllers/storeController';
+import { validateCep } from '../middlewares/validationMiddleware';
+import { asyncHandler } from '../middlewares/errorMiddleware';
 
 const router = Router();
 
-router.use('/location', storeRoutes);
-
-// pra checar se a API funciona normalmemnte
-router.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok' });
-});
+router.get('/stores/nearest/:cep', 
+  validateCep,
+  asyncHandler(StoreController.findNearestStores)
+);
 
 export default router;
