@@ -1,14 +1,13 @@
 {
   "name": "physical-stores-api",
   "version": "1.0.0",
-  "description": "API para localização de lojas físicas próximas ao CEP do usuário",
+  "description": "API that provides physical stores geolocation data throuhgh a RESTful interface",
   "main": "dist/app.js",
   "scripts": {
     "start": "node dist/server.js",
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
     "test": "jest",
-    "test:watch": "jest --watch",
     "seed:stores": "ts-node src/scripts/seedStores.ts",
     "lint": "eslint . --ext .ts"
   },
