@@ -64,6 +64,7 @@ PORT=3333
 MONGODB_URI=mongodb://localhost:27017/physical-stores
 EMAIL=email@something.com
 OPEN_ROUTE_SERVICE_API_KEY=yourkey
+```
 
 ## 🚀 Uso
 
