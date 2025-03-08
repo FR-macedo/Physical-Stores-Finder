@@ -54,29 +54,16 @@ npm install
 npm run build
 ```
 
-## ⚙️ Configuração
+## ⚙️ Configuração das Variáveis de Ambiente
 
-Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis:
+Antes de iniciar a aplicação, certifique-se de configurar as variáveis de ambiente corretamente.  
+Crie um arquivo `.env` na raiz do projeto e adicione as seguintes variáveis:
 
-```
-# Banco de Dados
+```ini
+PORT=3333
 MONGODB_URI=mongodb://localhost:27017/physical-stores
-
-# Serviços externos
-OPEN_ROUTE_SERVICE_API_KEY=sua_chave_api
-NOMINATIM_EMAIL=seu_email@exemplo.com
-FALLBACK_SPEED_KMH=40
-
-# Servidor
-PORT=3000
-NODE_ENV=development
-```
-
-### Configurações Obrigatórias
-
-- **MONGODB_URI**: URI de conexão com o MongoDB
-- **OPEN_ROUTE_SERVICE_API_KEY**: Chave da API OpenRouteService para cálculo de rotas
-- **NOMINATIM_EMAIL**: Email para uso na API Nominatim (obrigatório por questões de uso)
+EMAIL=email@something.com
+OPEN_ROUTE_SERVICE_API_KEY=yourkey
 
 ## 🚀 Uso
 
@@ -85,6 +72,7 @@ NODE_ENV=development
 npm run dev
 
 # Produção
+tsc
 npm start
 ```
 
