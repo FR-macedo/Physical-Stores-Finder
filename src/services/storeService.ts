@@ -3,11 +3,19 @@ import { ViaCepService } from "./viaCepService";
 import { NominatimService, Coordinates } from "./nominatimService";
 import { OpenRouteService } from "./openRouteService";
 import { logger } from "../config/logger";
+import { config } from "../config/env";
 import { calculateHaversineDistance } from "../utils/haversine";
+import { AppError } from "../utils/appError";
+import { Document } from "mongoose";
+
+interface RouteResponse {
+  distance: number;
+  duration: number;
+}
 
 interface StoreWithDistance {
-  store: IStore;
-  distance: number;
+  store: Document<IStore> & IStore & { _id: unknown; __v: number };
+  routeData: RouteResponse;
 }
 
 interface NearestStoresResponse {
@@ -19,76 +27,104 @@ export class StoreService {
   static async findNearestStores(userCep: string): Promise<NearestStoresResponse> {
     try {
       logger.info(`Iniciando busca de lojas para o CEP: ${userCep}`);
-      
+
       // 1. Obtendo o endereço pelo ViaCep
       const userAddress = await ViaCepService.getAddressByCep(userCep);
       const fullAddress = `${userAddress.logradouro}, ${userAddress.localidade} - ${userAddress.uf}, ${userAddress.cep}`;
       logger.info(`Endereço obtido: ${fullAddress}`);
-      
+
       // 2. Obtendo coordenadas pelo Nominatim
       const userCoordinates = await NominatimService.getCoordinates(fullAddress);
-      if (!userCoordinates) {
-        logger.warn(`Não foi possível obter coordenadas para o CEP: ${userCep}`);
-        throw new Error("Não foi possível localizar coordenadas para o endereço informado");
-      }
-      logger.info(`Coordenadas obtidas: ${userCoordinates.latitude}, ${userCoordinates.longitude}`);
-      
+      logger.info(`Coordenadas obtidas: ${userCoordinates.longitude}, ${userCoordinates.latitude}`);
+
       // 3. Obtendo todas as lojas do banco de dados
       const allStores = await Store.find({});
       logger.info(`Total de lojas encontradas no banco: ${allStores.length}`);
-      
-      const storesWithDistances: StoreWithDistance[] = [];
-      
-      for (const store of allStores) {
-        const storeCoordinates: Coordinates = {
-          latitude: store.location.coordinates[0],
-          longitude: store.location.coordinates[1],
-        };
-        
-        try {
-          logger.info(`Calculando rota para loja: ${store.name}...`);
-          const route = await OpenRouteService.getRoute(userCoordinates, storeCoordinates);
-          
-          let distance;
-          if (route && route.distance) {
-            distance = route.distance;
-          } else {
-            logger.warn(`OpenRouteService falhou para loja: ${store.name}, utilizando Haversine.`);
-            logger.info(`coordenadas do usuário: ${userCoordinates.latitude}, ${userCoordinates.longitude}`);
-            logger.info(`coordenadas da loja: ${storeCoordinates.latitude}, ${storeCoordinates.longitude}`);
-            distance = calculateHaversineDistance(userCoordinates, storeCoordinates);
-          }
-          
-          if (distance < 0) {
-            logger.warn(`Distância negativa calculada para loja: ${store.name}, verificando ordem das coordenadas.`);
-            distance = Math.abs(distance);
-          }
-          
-          logger.info(`Distância para loja ${store.name}: ${distance.toFixed(2)} km`);
-          
-          if (distance <= 100) {
-            storesWithDistances.push({ store, distance });
-          }
-        } catch (error) {
-          logger.error(`Erro ao calcular distância para loja ${store.name}: ${error}`);
-        }
+
+      if (allStores.length === 0) {
+        throw AppError.notFound("Nenhuma loja cadastrada no banco de dados.");
       }
-      
+
+      // 4. Calcular distâncias de forma paralela
+      const storesWithDistances = await this.calculateDistancesToStores(allStores, userCoordinates);
+
       if (storesWithDistances.length === 0) {
-        logger.error("Nenhuma loja dentro do raio de 100km foi encontrada.");
-        throw new Error("Não há lojas dentro do raio de 100km");
+        throw AppError.notFound("Não há lojas dentro do raio de 100km");
       }
-      
-      // 5. Ordenando lojas por distância
-      const sortedStores = storesWithDistances.sort((a, b) => a.distance - b.distance);
-      
+
+      const sortedStores = storesWithDistances.sort((a, b) => a.routeData.distance - b.routeData.distance);
+
+      logger.info(`Dados retornados da loja mais próxima: ${sortedStores[0].routeData.distance}, ${sortedStores[0].routeData.duration} - ${sortedStores[0].store.name}`);
+
       return {
-        nearestStore: sortedStores[0],
-        otherStores: sortedStores.slice(1),
+        nearestStore: this.formatStoreData(sortedStores[0]),
+        otherStores: sortedStores.slice(1).map(item => this.formatStoreData(item))
       };
     } catch (error) {
       logger.error(`Erro ao buscar lojas próximas: ${error}`);
-      throw error;
+      
+      if (error instanceof AppError) {
+        throw error;
+      }
+      
+      if (error instanceof Error) {
+        throw AppError.internal("Erro ao buscar lojas próximas", { originalError: error.message });
+      }
+      throw AppError.internal("Erro ao buscar lojas próximas", { originalError: String(error) });
     }
+  }
+  
+  private static async calculateDistancesToStores(
+    stores: any[], 
+    userCoordinates: Coordinates
+  ): Promise<StoreWithDistance[]> {
+    const storesWithDistances = (await Promise.all(
+      stores.map(async (store) => {
+        const requestId = `req-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+        const storeCoordinates: Coordinates = {
+          latitude: store.location.coordinates[1],
+          longitude: store.location.coordinates[0],
+        };
+  
+        try {
+          logger.info(`[${requestId}] Calculating route to store: ${store.name}...`);
+          const route = await OpenRouteService.getRoute(userCoordinates, storeCoordinates);
+  
+          let routeResponse: RouteResponse = {
+            distance: 0,
+            duration: 0,
+          };
+  
+          if (route) {
+            logger.info(`[${requestId}] OpenRouteAPI response for ${store.name} [Distance, Duration]: [${route.distance}, ${route.duration}]`);
+            routeResponse = { distance: route.distance, duration: route.duration };
+          } else {
+            logger.warn(`[${requestId}] OpenRouteService failed for store: ${store.name}, using Haversine.`);
+            routeResponse.distance = calculateHaversineDistance(userCoordinates, storeCoordinates);
+            routeResponse.duration = routeResponse.distance / config.FALLBACK_SPEED_KMH;
+          }
+  
+          if (routeResponse.distance <= 100) {
+            return { store, routeData: routeResponse };
+          }
+        } catch (error) {
+          logger.error(`[${requestId}] Error calculating distance to store ${store.name}: ${error}`);
+        }
+  
+        return null;
+      })
+    )).filter((store): store is StoreWithDistance => store !== null);
+    
+    return storesWithDistances;
+  }
+  
+  private static formatStoreData(storeData: StoreWithDistance): StoreWithDistance {
+    return {
+      store: storeData.store,
+      routeData: {
+        distance: storeData.routeData.distance,
+        duration: storeData.routeData.duration
+      }
+    };
   }
 }
