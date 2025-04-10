@@ -1,98 +1,188 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Physical Stores API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API RESTful que fornece dados de geolocalização de lojas físicas, permitindo encontrar as lojas mais próximas com base no CEP do usuário.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+![Versão](https://img.shields.io/badge/versão-1.0.0-blue)
+![Licença](https://img.shields.io/badge/licença-MIT-green)
 
-## Description
+## 📋 Índice
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- [Visão Geral](#visão-geral)
+- [Tecnologias](#tecnologias)
+- [Instalação](#instalação)
+- [Configuração](#configuração)
+- [Uso](#uso)
+- [Endpoints](#endpoints)
+- [Modelos de Dados](#modelos-de-dados)
+- [Serviços Integrados](#serviços-integrados)
+- [Scripts](#scripts)
+- [Testes](#testes)
+- [Licença](#licença)
 
-## Project setup
+## 🔍 Visão Geral
 
-```bash
-$ npm install
-```
+Physical Stores API é uma aplicação Node.js desenvolvida em TypeScript que permite encontrar lojas físicas próximas a um determinado CEP. A API utiliza múltiplos serviços de geolocalização para calcular distâncias e rotas entre o endereço do usuário e as lojas cadastradas.
 
-## Compile and run the project
+### Principais Funcionalidades
 
-```bash
-# development
-$ npm run start
+- Cálculo da loja mais próxima com base no CEP do usuário
+- Estimativa de distância e tempo de deslocamento
+- Suporte a falhas com método alternativo de cálculo de distância (Haversine)
+- Retorno da loja mais próxima e outras lojas dentro de um raio de 100km
 
-# watch mode
-$ npm run start:dev
+## 🔧 Tecnologias
 
-# production mode
-$ npm run start:prod
-```
+- **Node.js** - Ambiente de execução
+- **TypeScript** - Linguagem de programação
+- **Express** - Framework web
+- **Mongoose** - ODM para MongoDB
+- **Winston** - Sistema de logs
+- **Axios** - Cliente HTTP para requisições
+- **Jest** - Framework de testes
 
-## Run tests
+## 📥 Instalação
 
 ```bash
-# unit tests
-$ npm run test
+# Clone o repositório
+git clone [URL_DO_REPOSITÓRIO]
+cd physical-stores-api
 
-# e2e tests
-$ npm run test:e2e
+# Instale as dependências
+npm install
 
-# test coverage
-$ npm run test:cov
+# Compile o projeto
+npm run build
 ```
 
-## Deployment
+## ⚙️ Configuração das Variáveis de Ambiente
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+Antes de iniciar a aplicação, certifique-se de configurar as variáveis de ambiente corretamente.  
+Crie um arquivo `.env` na raiz do projeto e adicione as seguintes variáveis:
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+```ini
+PORT=3333
+MONGODB_URI=mongodb://localhost:27017/physical-stores
+EMAIL=email@something.com
+OPEN_ROUTE_SERVICE_API_KEY=yourkey
+```
+
+## 🚀 Uso
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+# Desenvolvimento
+npm run dev
+
+# Produção
+tsc
+npm start
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### Seed de Lojas
 
-## Resources
+Para popular o banco de dados com lojas de exemplo:
 
-Check out a few resources that may come in handy when working with NestJS:
+```bash
+npm run seed:stores
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+## 🔗 Endpoints
 
-## Support
+### GET /api/stores/nearest/:cep
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+Retorna a loja mais próxima e outras lojas dentro de um raio de 100km a partir do CEP informado.
 
-## Stay in touch
+**Parâmetros:**
+- `cep` (obrigatório): CEP do usuário no formato 00000000 ou 00000-000
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+**Exemplo de Resposta:**
+```json
+{
+  "message": "Lojas encontradas com sucesso",
+  "nearestStore": {
+    "id": "60d21b4667d0d8992e610c85",
+    "name": "Loja Centro",
+    "address": {
+      "cep": "01001-000",
+      "street": "Praça da Sé",
+      "number": "1",
+      "neighborhood": "Sé",
+      "city": "São Paulo",
+      "state": "SP"
+    },
+    "location": {
+      "latitude": -23.550520,
+      "longitude": -46.633309
+    },
+    "distance": 2.3,
+    "duration": 8.4
+  },
+  "otherStores": [
+    {
+      "id": "60d21b4667d0d8992e610c86",
+      "name": "Loja Paulista",
+      "address": {
+        "cep": "01310-100",
+        "street": "Avenida Paulista",
+        "number": "1000",
+        "neighborhood": "Bela Vista",
+        "city": "São Paulo",
+        "state": "SP"
+      },
+      "location": {
+        "latitude": -23.565568,
+        "longitude": -46.652623
+      },
+      "distance": 4.5,
+      "duration": 12.8
+    }
+  ]
+}
+```
 
-## License
+## 📊 Modelos de Dados
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+### Store (Loja)
+
+```typescript
+{
+  name: string;             // Nome da loja
+  cep: string;              // CEP da loja
+  street: string;           // Logradouro
+  number: string;           // Número
+  neighborhood: string;     // Bairro
+  city: string;             // Cidade
+  state: string;            // Estado (UF)
+  location: {
+    type: 'Point';
+    coordinates: [number, number]; // [longitude, latitude]
+  };
+}
+```
+
+## 🔌 Serviços Integrados
+
+A API integra-se com os seguintes serviços externos:
+
+1. **ViaCep** - Para obtenção de endereços a partir de CEP
+2. **Nominatim (OpenStreetMap)** - Para obtenção de coordenadas a partir de endereço
+3. **OpenRouteService** - Para cálculo de rotas e distâncias entre pontos
+
+Em caso de falha nos serviços, a API utiliza o algoritmo de Haversine para cálculo de distância em linha reta.
+
+## 📜 Scripts
+
+- `npm start` - Inicia a aplicação em produção
+- `npm run dev` - Inicia a aplicação em modo de desenvolvimento
+- `npm run build` - Compila o projeto TypeScript
+- `npm test` - Executa os testes unitários
+- `npm run seed:stores` - Popula o banco de dados com lojas de exemplo
+- `npm run lint` - Executa o linter para verificar o código
+
+
+## 📝 Licença
+
+Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+
+---
+
+Desenvolvido por [FR-macedo](https://github.com/FR-macedo)
