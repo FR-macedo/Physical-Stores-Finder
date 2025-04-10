@@ -23,6 +23,51 @@ API RESTful que fornece dados de geolocalização de lojas físicas, permitindo 
 
 Physical Stores API é uma aplicação Node.js desenvolvida em TypeScript que permite encontrar lojas físicas próximas a um determinado CEP. A API utiliza múltiplos serviços de geolocalização para calcular distâncias e rotas entre o endereço do usuário e as lojas cadastradas.
 
+## Estrutura do Projeto
+
+```
+Repo
+├──docs
+│   └──TODO
+│   │   └──Tarefas.md
+├──src
+│   ├──common
+│   │   ├──exceptions
+│   │   │   └──global-exception.filter.ts
+│   │   ├──formatters
+│   │   └──utils
+│   ├──config
+│   │   └──configuration.ts
+│   ├──modules
+│   │   └──store
+│   │   │   ├──dto
+│   │   │   ├──entities
+│   │   │   ├──repository
+│   │   │   └──store.module.ts
+│   ├──providers
+│   │   ├──google
+│   │   ├──nominatim
+│   │   └──viacep
+│   ├──scripts
+│   ├──app.controller.spec.ts
+│   ├──app.controller.ts
+│   ├──app.module.ts
+│   ├──app.service.ts
+│   └──main.ts
+├──test
+│   ├──app.e2e-spec.ts
+│   └──jest-e2e.json
+├──eslint.config.mjs
+├──nest-cli.json
+├──package-lock.json
+├──package.json
+├──README.md
+├──tsconfig.build.json
+├──tsconfig.json
+├──.gitignore
+└──.prettierrc
+```
+
 ### Principais Funcionalidades
 
 - Cálculo da loja mais próxima com base no CEP do usuário
