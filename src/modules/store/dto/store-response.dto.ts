@@ -61,13 +61,11 @@ export class StoreResponseDto {
   }
   
   function formatDistance(distance: number): string {
-    // Implementar formatação de distância conforme necessário
     if (!distance) return '';
     return `${(distance / 1000).toFixed(1)} km`;
   }
   
   function formatDuration(duration: number): string {
-    // Implementar formatação de duração conforme necessário
     if (!duration) return '';
     
     const minutes = Math.round(duration / 60);

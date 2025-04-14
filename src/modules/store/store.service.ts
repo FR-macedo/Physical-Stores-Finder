@@ -60,10 +60,7 @@ export class StoreService {
     latitude: number,
     maxDistance: number = 10,
   ): Promise<StoreWithRouteData[]> {
-    // Distância máxima em metros (convertemos de km para metros)
     const maxDistanceInMeters = maxDistance * 1000;
-
-    // Encontrar lojas próximas usando geospatial query
     const stores = await this.storeModel.find({
       location: {
         $near: {
@@ -76,9 +73,7 @@ export class StoreService {
       },
     }).exec();
 
-    // Calcular distância e duração (simulados aqui)
     return stores.map(store => {
-      // Cálculo simples da distância em linha reta (em metros)
       const storeCoords = store.location.coordinates;
       const distance = this.calculateDistance(
         latitude, 
@@ -87,7 +82,6 @@ export class StoreService {
         storeCoords[0]
       );
       
-      // Simular o tempo de viagem (1 minuto para cada km, em segundos)
       const duration = (distance / 1000) * 60;
 
       return {
@@ -100,14 +94,13 @@ export class StoreService {
     });
   }
 
-  // Cálculo de distância usando a fórmula de Haversine
   private calculateDistance(
     lat1: number, 
     lon1: number, 
     lat2: number, 
     lon2: number
   ): number {
-    const R = 6371000; // Raio da Terra em metros
+    const R = 6371000; 
     const dLat = this.deg2rad(lat2 - lat1);
     const dLon = this.deg2rad(lon2 - lon1);
     const a =
@@ -115,7 +108,7 @@ export class StoreService {
       Math.cos(this.deg2rad(lat1)) * Math.cos(this.deg2rad(lat2)) *
       Math.sin(dLon / 2) * Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const distance = R * c; // Distância em metros
+    const distance = R * c; 
     return distance;
   }
 
