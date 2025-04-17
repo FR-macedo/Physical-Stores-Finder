@@ -76,4 +76,4 @@ export class Store {
 export const StoreSchema = SchemaFactory.createForClass(Store);
 
 // Criar índice geoespacial
-StoreSchema.index({ location: '2dsphere' });
+StoreSchema.index({ location: '2dsphere' }); 
