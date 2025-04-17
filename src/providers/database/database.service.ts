@@ -2,22 +2,41 @@ import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/commo
 import { ConfigService } from '@nestjs/config';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
+import { DatabaseConnection } from './database.connection';
 
 @Injectable()
 export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(DatabaseService.name);
 
   constructor(
-    @InjectConnection() private readonly connection: Connection,
+    private readonly databaseConnection: DatabaseConnection,
     private readonly configService: ConfigService,
+    @InjectConnection() private readonly connection: Connection,
   ) {}
 
-  onModuleInit() {
+  async onModuleInit() {
+    await this.connect();
+  }
+
+  async onModuleDestroy() {
+    await this.disconnect();
+  }
+
+  async connect(): Promise<void> {
+    const url = this.configService.get<string>('MONGODB_URI');
+    
+    if (!url) {
+      this.logger.error('URL do banco de dados não configurada');
+      throw new Error('URL do banco de dados não configurada');
+    }
+
+    await this.databaseConnection.connect(url);
     this.logger.log('Conexão com o banco de dados estabelecida com sucesso');
   }
 
-  onModuleDestroy() {
-    this.logger.log('Fechando conexão com o banco de dados');
+  async disconnect(): Promise<void> {
+    await this.databaseConnection.disconnect();
+    this.logger.log('Desconectado do banco de dados');
   }
 
   async checkHealth(): Promise<boolean> {
