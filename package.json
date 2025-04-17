@@ -1,10 +1,10 @@
 {
-  "name": "phsysical-stores-api",
-  "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "name": "physical-stores-finder",
+  "version": "2.0.0",
+  "description": "Softawre para calcular rotas e frete para entregas",
+  "author": "FR-Macedo",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "MIT",
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
@@ -20,17 +20,23 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@nestjs/axios": "^4.0.0",
     "@nestjs/common": "^11.0.14",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.14",
     "@nestjs/mapped-types": "^2.1.0",
     "@nestjs/mongoose": "^11.0.3",
     "@nestjs/platform-express": "^11.0.14",
+    "@nestjs/swagger": "^11.1.3",
+    "axios": "^1.8.4",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "phsysical-stores-api": "file:",
+    "physical-stores-finder": "file:",
+    "Physical-Stores-Finder": "file:",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
